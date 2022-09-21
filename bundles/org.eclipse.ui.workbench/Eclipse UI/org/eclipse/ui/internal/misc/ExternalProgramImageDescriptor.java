@@ -65,7 +65,7 @@ public class ExternalProgramImageDescriptor extends ImageDescriptor {
 	@Override
 	public ImageData getImageData(int zoom) {
 		if (program != null && program.getImageData() != null) {
-			return program.getImageData();
+			return program.getImageData(zoom);
 		}
 		return WorkbenchImages.getImageDescriptor(ISharedImages.IMG_OBJ_FILE).getImageData(zoom);
 	}
