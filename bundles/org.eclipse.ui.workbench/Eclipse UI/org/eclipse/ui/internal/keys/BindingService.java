@@ -15,6 +15,8 @@
  *******************************************************************************/
 package org.eclipse.ui.internal.keys;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,8 +25,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import org.eclipse.core.commands.CommandManager;
 import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.core.commands.common.NotDefinedException;
@@ -482,11 +482,6 @@ public final class BindingService implements IBindingService {
 		return result;
 	}
 
-	/**
-	 * @param id
-	 * @param rootContext
-	 * @return
-	 */
 	private MBindingContext searchContexts(String id, List<MBindingContext> rootContext) {
 		for (MBindingContext context : rootContext) {
 			if (context.getElementId().equals(id)) {
@@ -518,10 +513,6 @@ public final class BindingService implements IBindingService {
 		createOrUpdateMKeyBinding(application, table, binding);
 	}
 
-	/**
-	 * @param contextId
-	 * @return
-	 */
 	private MBindingTable getMTable(String contextId) {
 		for (MBindingTable bt : application.getBindingTables()) {
 			if (bt.getBindingContext().getElementId().equals(contextId)) {

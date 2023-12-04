@@ -515,8 +515,6 @@ public class ResourceListSelectionDialog extends SelectionDialog {
 		allowUserToToggleDerived = allow;
 	}
 
-	/**
-	 */
 	private void filterResources(boolean force) {
 		String oldPattern = force ? null : patternString;
 		patternString = adjustPattern();
@@ -573,7 +571,7 @@ public class ResourceListSelectionDialog extends SelectionDialog {
 				match = true;
 			} else {
 				int compare = descriptors[index].compareTo(desc);
-				if (compare == -1) {
+				if (compare < 0) {
 					low = index;
 				} else {
 					high = index;
@@ -586,8 +584,6 @@ public class ResourceListSelectionDialog extends SelectionDialog {
 		return -1;
 	}
 
-	/**
-	 */
 	private void gatherResources(boolean force) {
 		String oldPattern = force ? null : patternString;
 		patternString = adjustPattern();
@@ -660,7 +656,7 @@ public class ResourceListSelectionDialog extends SelectionDialog {
 				match = true;
 			} else {
 				int compare = descriptors[index].compareTo(desc);
-				if (compare == -1) {
+				if (compare < 0) {
 					low = index;
 				} else {
 					high = index;

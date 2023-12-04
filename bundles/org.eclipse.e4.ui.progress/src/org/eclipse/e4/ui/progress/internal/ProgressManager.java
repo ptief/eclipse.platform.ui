@@ -30,14 +30,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-
+import org.eclipse.core.runtime.ICoreRunnable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.QualifiedName;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
@@ -55,6 +52,9 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.widgets.Display;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
 
 /**
  * JobProgressManager provides the progress monitor to the job manager and
@@ -77,7 +77,7 @@ public class ProgressManager extends ProgressProvider {
 	private static ProgressManager singleton;
 
 	final private Map<Job, JobInfo> jobs = Collections
-			.synchronizedMap(new HashMap<Job, JobInfo>());
+			.synchronizedMap(new HashMap<>());
 
 	final Map<Job, JobMonitor> runnableMonitors = new HashMap<>();
 
@@ -169,7 +169,6 @@ public class ProgressManager extends ProgressProvider {
 	 * Return a monitor for the job. Check if we cached a monitor for this job
 	 * previously for a long operation timeout check.
 	 *
-	 * @param job
 	 * @return IProgressMonitor
 	 */
 	public JobMonitor progressFor(Job job) {
@@ -206,7 +205,6 @@ public class ProgressManager extends ProgressProvider {
 	/**
 	 * Get the JobInfo for the job. If it does not exist create it.
 	 *
-	 * @param job
 	 * @return JobInfo
 	 */
 	JobInfo getJobInfo(Job job) {
@@ -222,7 +220,6 @@ public class ProgressManager extends ProgressProvider {
 	 * Return an existing job info for the given Job or <code>null</code> if
 	 * there isn't one.
 	 *
-	 * @param job
 	 * @return JobInfo
 	 */
 	JobInfo internalGetJobInfo(Job job) {
@@ -243,8 +240,6 @@ public class ProgressManager extends ProgressProvider {
 
 		/**
 		 * Create a monitor on the supplied job.
-		 *
-		 * @param newJob
 		 */
 		JobMonitor(Job newJob) {
 			job = newJob;
@@ -252,8 +247,6 @@ public class ProgressManager extends ProgressProvider {
 
 		/**
 		 * Add monitor as another monitor that
-		 *
-		 * @param monitor
 		 */
 		void addProgressListener(IProgressMonitor monitor) {
 			listener = monitor;
@@ -436,26 +429,16 @@ public class ProgressManager extends ProgressProvider {
 					boolean noDialog = shouldRunInBackground();
 					if (!noDialog) {
 						final IJobChangeEvent finalEvent = event;
-						Job showJob = new UIJob(
-								ProgressMessages.ProgressManager_showInDialogName) {
-							@Override
-							public IStatus runInUIThread(
-									IProgressMonitor monitor) {
-								progressService.showInDialog(null, finalEvent.getJob());
-								return Status.OK_STATUS;
-							}
-						};
+						Job showJob = UIJob.create(ProgressMessages.ProgressManager_showInDialogName,
+								(ICoreRunnable) m -> progressService.showInDialog(null, finalEvent.getJob()));
 						showJob.setSystem(true);
 						showJob.schedule();
-						return;
 					}
 				}
 			}
 
 			/**
 			 * Update the listeners for the receiver for the event.
-			 *
-			 * @param event
 			 */
 			private void updateFor(IJobChangeEvent event) {
 				if (isInfrastructureJob(event.getJob())) {
@@ -530,7 +513,6 @@ public class ProgressManager extends ProgressProvider {
 
 	/**
 	 * Refresh the group when info is sleeping.
-	 * @param group
 	 */
 	private void sleepGroup(GroupInfo group, JobInfo info) {
 		for (IJobProgressManagerListener listener : listeners) {
@@ -549,8 +531,6 @@ public class ProgressManager extends ProgressProvider {
 
 	/**
 	 * Add an IJobProgressManagerListener to listen to the changes.
-	 *
-	 * @param listener
 	 */
 	void addListener(IJobProgressManagerListener listener) {
 		listeners.add(listener);
@@ -559,8 +539,6 @@ public class ProgressManager extends ProgressProvider {
 	/**
 	 * Remove the supplied IJobProgressManagerListener from the list of
 	 * listeners.
-	 *
-	 * @param listener
 	 */
 	void removeListener(IJobProgressManagerListener listener) {
 		listeners.remove(listener);
@@ -678,7 +656,6 @@ public class ProgressManager extends ProgressProvider {
 	/**
 	 * Return whether or not this job is currently displayable.
 	 *
-	 * @param job
 	 * @param debug
 	 *            If the listener is in debug mode.
 	 * @return boolean <code>true</code> if the job is not displayed.
@@ -691,8 +668,6 @@ public class ProgressManager extends ProgressProvider {
 	 * Return whether or not we even display this job with debug mode set to
 	 * debug.
 	 *
-	 * @param job
-	 * @param debug
 	 * @return boolean
 	 */
 	boolean isNeverDisplaying(Job job, boolean debug) {
@@ -708,7 +683,6 @@ public class ProgressManager extends ProgressProvider {
 	/**
 	 * Return whether or not this job is an infrastructure job.
 	 *
-	 * @param job
 	 * @return boolean <code>true</code> if it is never displayed.
 	 */
 	private boolean isInfrastructureJob(Job job) {
@@ -777,7 +751,6 @@ public class ProgressManager extends ProgressProvider {
 	/**
 	 * Returns the image descriptor with the given relative path.
 	 *
-	 * @param source
 	 * @return Image
 	 */
 	Image getImage(ImageData source) {
@@ -814,9 +787,6 @@ public class ProgressManager extends ProgressProvider {
 
 	/**
 	 * Add the listener to the family.
-	 *
-	 * @param family
-	 * @param listener
 	 */
 	void addListenerToFamily(Object family, IJobBusyListener listener) {
 		synchronized (familyListeners) {
@@ -831,8 +801,6 @@ public class ProgressManager extends ProgressProvider {
 
 	/**
 	 * Remove the listener from all families.
-	 *
-	 * @param listener
 	 */
 	void removeListener(IJobBusyListener listener) {
 		synchronized (familyListeners) {
@@ -852,7 +820,6 @@ public class ProgressManager extends ProgressProvider {
 	/**
 	 * Return the listeners for the job.
 	 *
-	 * @param job
 	 * @return Collection of IJobBusyListener
 	 */
 	private Collection<IJobBusyListener> busyListenersForJob(Job job) {
@@ -897,7 +864,6 @@ public class ProgressManager extends ProgressProvider {
 	/**
 	 * Check the if the job should be removed from the list as it may be stale.
 	 *
-	 * @param job
 	 * @return boolean
 	 */
 	boolean checkForStaleness(Job job) {

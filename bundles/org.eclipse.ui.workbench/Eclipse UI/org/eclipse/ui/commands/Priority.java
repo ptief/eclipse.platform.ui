@@ -44,10 +44,8 @@ import org.eclipse.ui.internal.util.Util;
  *             constants. This API is scheduled for deletion, see Bug 431177 for
  *             details
  * @noreference This class is scheduled for deletion.
- *
  */
 @Deprecated
-@SuppressWarnings("rawtypes")
 public final class Priority implements Comparable {
 
 	/**

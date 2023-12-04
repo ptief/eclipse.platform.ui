@@ -14,9 +14,9 @@
  *******************************************************************************/
 package org.eclipse.e4.ui.internal;
 
+import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Locale;
-import javax.inject.Inject;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.internal.services.ResourceBundleHelper;
@@ -41,7 +41,6 @@ import org.osgi.service.log.LogService;
  * specified {@link IEclipseContext} and additionally fires an event on the event bus.
  *
  * @author Dirk Fauth
- *
  */
 @SuppressWarnings("restriction")
 public class LocaleChangeServiceImpl implements ILocaleChangeService {

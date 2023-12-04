@@ -29,8 +29,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import org.eclipse.core.expressions.Expression;
 import org.eclipse.core.runtime.Assert;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.ICoreRunnable;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobFunction;
@@ -108,8 +107,6 @@ public final class MutableActivityManager extends AbstractActivityManager
 
 	/**
 	 * Create a new instance of this class using the platform extension registry.
-	 *
-	 * @param triggerPointAdvisor
 	 */
 	public MutableActivityManager(ITriggerPointAdvisor triggerPointAdvisor) {
 		this(triggerPointAdvisor, new ExtensionActivityRegistry(Platform.getExtensionRegistry()));
@@ -132,6 +129,23 @@ public final class MutableActivityManager extends AbstractActivityManager
 		this.activityRegistry.addActivityRegistryListener(activityRegistryListener);
 
 		readRegistry(true);
+	}
+
+	@Override
+	public void dispose() {
+		super.dispose();
+		clearExpressions();
+		activityRegistry.removeActivityRegistryListener(activityRegistryListener);
+		activitiesById.clear();
+		activityRequirementBindingsByActivityId.clear();
+		activityPatternBindingsByActivityId.clear();
+		categoriesById.clear();
+		categoryActivityBindingsByCategoryId.clear();
+		categoryDefinitionsById.clear();
+		definedActivityIds.clear();
+		definedCategoryIds.clear();
+		enabledActivityIds.clear();
+		identifiersById.clear();
 	}
 
 	@Override
@@ -506,11 +520,6 @@ public final class MutableActivityManager extends AbstractActivityManager
 
 	/**
 	 * Updates all the listeners to changes in the state.
-	 *
-	 * @param activityManagerChanged
-	 * @param activityEventsByActivityId
-	 * @param deltaActivityIds
-	 * @param previouslyEnabledActivityIds
 	 */
 	private void updateListeners(boolean activityManagerChanged, Map<String, ActivityEvent> activityEventsByActivityId,
 			Set<String> deltaActivityIds, Set<String> previouslyEnabledActivityIds) {
@@ -528,7 +537,8 @@ public final class MutableActivityManager extends AbstractActivityManager
 
 		if (activityManagerChanged) {
 			fireActivityManagerChanged(
-					new ActivityManagerEvent(this, false, false, true, null, null, previouslyEnabledActivityIds));
+					new ActivityManagerEvent(this, false, false, true, null, null,
+							previouslyEnabledActivityIds, deltaActivityIds));
 		}
 	}
 
@@ -546,10 +556,6 @@ public final class MutableActivityManager extends AbstractActivityManager
 		updateExpressionEnabledActivities(id, previouslyEnabledActivityIds);
 	}
 
-	/**
-	 * @param id
-	 * @param previouslyEnabledActivityIds
-	 */
 	private void updateExpressionEnabledActivities(String id, Set<String> previouslyEnabledActivityIds) {
 		Set<String> deltaActivityIds = new HashSet<>();
 		deltaActivityIds.add(id);
@@ -596,7 +602,7 @@ public final class MutableActivityManager extends AbstractActivityManager
 	}
 
 	private IPropertyChangeListener enabledWhenListener = event -> {
-		if (addingEvaluationListener) {
+		if (addingEvaluationListener || isDisposed()) {
 			return;
 		}
 
@@ -832,13 +838,8 @@ public final class MutableActivityManager extends AbstractActivityManager
 					}
 				}
 				if (!identifierEventsByIdentifierId.isEmpty()) {
-					UIJob notifyJob = new UIJob("Activity Identifier Update UI") { //$NON-NLS-1$
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor) {
-							notifyIdentifiers(identifierEventsByIdentifierId);
-							return Status.OK_STATUS;
-						}
-					};
+					UIJob notifyJob = UIJob.create("Activity Identifier Update UI", //$NON-NLS-1$
+							(ICoreRunnable) m -> notifyIdentifiers(identifierEventsByIdentifierId));
 					notifyJob.setSystem(true);
 					notifyJob.schedule();
 				}

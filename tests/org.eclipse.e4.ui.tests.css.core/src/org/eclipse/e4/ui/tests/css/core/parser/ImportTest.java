@@ -50,16 +50,16 @@ public class ImportTest {
 
 	/**
 	 * Test case for Bug 430052 - [CSS] Imported rules cannot be overridden
-	 *
-	 * @throws Exception
 	 */
 	@Test
-	public void testOverrideImportedRule() throws Exception {
-		String importedCss = ".ClassAlpha {\n" //
-				+ "     property: value;\n" //
-				+ "  }\n" + "  .ClassBeta {\n" //
-				+ "     property: value1;\n" //
-				+ "  }";
+	void testOverrideImportedRule() throws Exception {
+		String importedCss = """
+			.ClassAlpha {
+			     property: value;
+			  }
+			  .ClassBeta {
+			     property: value1;
+			  }""";
 
 		File importedFile = createTempCssFile(importedCss);
 
@@ -95,7 +95,7 @@ public class ImportTest {
 	 * Test for [CSS] nested imports duplicate rules
 	 */
 	@Test
-	public void testNestedImports() throws IOException {
+	void testNestedImports() throws IOException {
 		String deepNestedCss = "ChildChild { property: value; }\n";
 
 		File importedFile = createTempCssFile(deepNestedCss);

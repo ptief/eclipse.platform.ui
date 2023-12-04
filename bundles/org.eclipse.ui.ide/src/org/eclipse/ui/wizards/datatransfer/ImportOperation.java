@@ -41,7 +41,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.osgi.util.NLS;
@@ -241,11 +240,11 @@ public class ImportOperation extends WorkspaceModifyOperation {
 		IPath sourceRootPath = null;
 
 		if (this.source != null) {
-			sourceRootPath = new Path(provider.getFullPath(this.source));
+			sourceRootPath = IPath.fromOSString(provider.getFullPath(this.source));
 		}
 		while (sourceIter.hasNext()) {
 			Object nextSource = sourceIter.next();
-			IPath sourcePath = new Path(provider.getFullPath(nextSource));
+			IPath sourcePath = IPath.fromOSString(provider.getFullPath(nextSource));
 			IPath newDestinationPath;
 			IResource newDestination;
 
@@ -317,7 +316,7 @@ public class ImportOperation extends WorkspaceModifyOperation {
 		}
 
 		for (int i = 0; i < segmentCount; i++) {
-			currentFolder = currentFolder.getFolder(new Path(path.segment(i)));
+			currentFolder = currentFolder.getFolder(IPath.fromOSString(path.segment(i)));
 			if (!currentFolder.exists()) {
 				if (createVirtualFolder)
 					((IFolder) currentFolder).create(IResource.VIRTUAL, true,
@@ -350,7 +349,7 @@ public class ImportOperation extends WorkspaceModifyOperation {
 				.getProject(path.segment(0));
 
 		for (int i = 1; i < segmentCount; i++) {
-			currentFolder = currentFolder.getFolder(new Path(path.segment(i)));
+			currentFolder = currentFolder.getFolder(IPath.fromOSString(path.segment(i)));
 			if (!currentFolder.exists()) {
 				((IFolder) currentFolder).create(false, true, null);
 			}
@@ -407,7 +406,7 @@ public class ImportOperation extends WorkspaceModifyOperation {
 	 */
 	IContainer getDestinationContainerFor(Object fileSystemObject)
 			throws CoreException {
-		IPath pathname = new Path(provider.getFullPath(fileSystemObject));
+		IPath pathname = IPath.fromOSString(provider.getFullPath(fileSystemObject));
 
 		if (createContainerStructure) {
 			return createContainersFor(pathname.removeLastSegments(1));
@@ -415,7 +414,7 @@ public class ImportOperation extends WorkspaceModifyOperation {
 		if (source == fileSystemObject) {
 			return null;
 		}
-		IPath sourcePath = new Path(provider.getFullPath(source));
+		IPath sourcePath = IPath.fromOSString(provider.getFullPath(source));
 		IPath destContainerPath = pathname.removeLastSegments(1);
 		IPath relativePath = destContainerPath.removeFirstSegments(
 				sourcePath.segmentCount()).setDevice(null);
@@ -511,8 +510,7 @@ public class ImportOperation extends WorkspaceModifyOperation {
 
 		String fileObjectPath = provider.getFullPath(fileObject);
 		subMonitor.subTask(fileObjectPath);
-		IFile targetResource = containerResource.getFile(new Path(provider
-				.getLabel(fileObject)));
+		IFile targetResource = containerResource.getFile(IPath.fromOSString(provider.getLabel(fileObject)));
 
 		if (rejectedFiles.contains(targetResource.getFullPath())) {
 			return;
@@ -545,7 +543,7 @@ public class ImportOperation extends WorkspaceModifyOperation {
 				if (targetResource.exists())
 					targetResource.delete(true, subMonitor.split(50));
 				targetResource.createLink(
-						createRelativePath(new Path(provider.getFullPath(fileObject)), targetResource), 0,
+						createRelativePath(IPath.fromOSString(provider.getFullPath(fileObject)), targetResource), 0,
 						subMonitor.split(50));
 			} else if (targetResource.exists()) {
 				if (targetResource.isLinked()) {
@@ -600,9 +598,6 @@ public class ImportOperation extends WorkspaceModifyOperation {
 
 	/**
 	 * Reuse the file attributes set in the import.
-	 *
-	 * @param targetResource
-	 * @param fileObject
 	 */
 	private void setResourceAttributes(IFile targetResource, Object fileObject) {
 
@@ -643,7 +638,6 @@ public class ImportOperation extends WorkspaceModifyOperation {
 	 *
 	 * @param filesToImport the list of file system objects to import
 	 *   (element type: <code>Object</code>)
-	 * @throws CoreException
 	 * @exception OperationCanceledException if canceled
 	 */
 	void importFileSystemObjects(List filesToImport, IProgressMonitor monitor) throws CoreException {
@@ -654,8 +648,7 @@ public class ImportOperation extends WorkspaceModifyOperation {
 			Object fileSystemObject = filesEnum.next();
 			if (source == null) {
 				// We just import what we are given into the destination
-				IPath sourcePath = new Path(provider
-						.getFullPath(fileSystemObject)).removeLastSegments(1);
+				IPath sourcePath = IPath.fromOSString(provider.getFullPath(fileSystemObject)).removeLastSegments(1);
 				if (provider.isFolder(fileSystemObject) && sourcePath.isEmpty()) {
 					// If we don't have a parent then we have selected the
 					// file systems root. Roots can't copied (at least not
@@ -679,7 +672,6 @@ public class ImportOperation extends WorkspaceModifyOperation {
 	 * @param folderObject the file system container object to be imported
 	 * @param policy determines how the folder object and children are imported
 	 * @return the policy to use to import the folder's children
-	 * @throws CoreException
 	 */
 	int importFolder(Object folderObject, int policy, IProgressMonitor monitor) throws CoreException {
 		IContainer containerResource;
@@ -725,7 +717,7 @@ public class ImportOperation extends WorkspaceModifyOperation {
 			else if (createLinks) {
 				IFolder newFolder = workspace.getRoot().getFolder(resourcePath);
 				newFolder.createLink(
-						createRelativePath(new Path(provider.getFullPath(folderObject)), newFolder),
+						createRelativePath(IPath.fromOSString(provider.getFullPath(folderObject)), newFolder),
 						0, null);
 				policy = POLICY_SKIP_CHILDREN;
 			} else
@@ -742,8 +734,6 @@ public class ImportOperation extends WorkspaceModifyOperation {
 	 * "C:\foo\bar\file.txt" to "VAR\file.txt" granted that the relativeVariable
 	 * is "VAR" and points to "C:\foo\bar\").
 	 *
-	 * @param location
-	 * @param resource
 	 * @return an URI that was made relative to a variable
 	 */
 	private IPath createRelativePath(IPath location, IResource resource) {
@@ -766,7 +756,6 @@ public class ImportOperation extends WorkspaceModifyOperation {
 	 *
 	 * @param fileSystemObject the file system object to be imported
 	 * @param policy determines how the file system object and children are imported
-	 * @throws CoreException
 	 * @exception OperationCanceledException if canceled
 	 */
 	void importRecursivelyFrom(Object fileSystemObject, int policy, IProgressMonitor mon) throws CoreException {

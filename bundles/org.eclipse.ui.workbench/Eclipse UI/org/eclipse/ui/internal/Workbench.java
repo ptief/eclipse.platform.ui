@@ -135,6 +135,7 @@ import org.eclipse.jface.util.BidiUtils;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.OpenStrategy;
 import org.eclipse.jface.util.SafeRunnable;
+import org.eclipse.jface.util.Util;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.IShellProvider;
 import org.eclipse.jface.window.Window;
@@ -145,10 +146,14 @@ import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.graphics.DeviceData;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IDecoratorManager;
 import org.eclipse.ui.IEditorInput;
@@ -848,12 +853,34 @@ public final class Workbench extends EventManager implements IWorkbench, org.ecl
 		Image background = null;
 		if (splashLoc != null) {
 			try (InputStream input = new BufferedInputStream(new FileInputStream(splashLoc))) {
-				background = new Image(display, input);
+				background = getImage(display, input);
 			} catch (SWTException | IOException e) {
 				StatusManager.getManager().handle(StatusUtil.newStatus(WorkbenchPlugin.PI_WORKBENCH, e));
 			}
 		}
 		return background;
+	}
+
+	private static Image getImage(Display display, InputStream input) {
+		Image image = new Image(display, input);
+
+		if (Util.isMac()) {
+			/*
+			 * Due to a bug in MacOS Sonoma
+			 * (https://github.com/eclipse-platform/eclipse.platform.swt/issues/772) ,Splash
+			 * Screen gets flipped.As a workaround the image is flipped and returned.
+			 */
+			if (System.getProperty("os.version").startsWith("14")) { //$NON-NLS-1$ //$NON-NLS-2$
+				GC gc = new GC(image);
+				Transform tr = new Transform(display);
+				tr.setElements(1, 0, 0, -1, 0, 0);
+				gc.setTransform(tr);
+				gc.drawImage(image, 0, -(image.getBounds().height));
+				tr.dispose();
+				gc.dispose();
+			}
+		}
+		return image;
 	}
 
 	/**
@@ -1462,9 +1489,13 @@ public final class Workbench extends EventManager implements IWorkbench, org.ecl
 					Point size = result.getWindowConfigurer().getInitialSize();
 					window.setWidth(size.x);
 					window.setHeight(size.y);
+
+					placeNearActiveShell(window);
+
 					application.getChildren().add(window);
 					application.setSelectedElement(window);
 				}
+
 				ContextInjectionFactory.inject(result, windowContext);
 				windowContext.set(IWorkbenchWindow.class, result);
 			} finally {
@@ -1481,6 +1512,81 @@ public final class Workbench extends EventManager implements IWorkbench, org.ecl
 			result.fireWindowOpened();
 		}
 		return result;
+	}
+
+	private void placeNearActiveShell(MWindow window) {
+		if (getDisplay() == null) {
+			return;
+		}
+
+		Shell activeShell = getDisplay().getActiveShell();
+		if (activeShell == null) {
+			return;
+		}
+
+		Monitor currentMonitor = findMonitorThatContainsMostOf(activeShell.getBounds());
+
+		final int padding = 20;
+		Rectangle paddedMonitorBounds = shrink(currentMonitor.getBounds(), padding);
+
+		final int offsetToExistingShell = 100;
+		Rectangle newShellBounds = new Rectangle(activeShell.getBounds().x + offsetToExistingShell,
+				activeShell.getBounds().y + offsetToExistingShell, window.getWidth(), window.getHeight());
+
+		moveIntoBounds(newShellBounds, paddedMonitorBounds);
+
+		window.setX(newShellBounds.x);
+		window.setY(newShellBounds.y);
+	}
+
+	private static Rectangle shrink(Rectangle rectangle, int padding) {
+		return new Rectangle(rectangle.x + padding, rectangle.y + padding, rectangle.width - 2 * padding,
+				rectangle.height - 2 * padding);
+	}
+
+	/**
+	 * @param rectangle a rectangle (e.g. the bounds of the shell)
+	 * @return The monitor that contains the biggest portion of the rectangle or the
+	 *         primary monitor if the rectangle is outside all monitors.
+	 */
+	private Monitor findMonitorThatContainsMostOf(Rectangle rectangle) {
+		Monitor bestFittingMonitor = getDisplay().getPrimaryMonitor();
+		int maxIntersectionArea = 0;
+
+		for (Monitor monitor : getDisplay().getMonitors()) {
+			Rectangle intersection = new Rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+			intersection.intersect(monitor.getBounds());
+
+			int insersectionArea = intersection.width * intersection.height;
+			if (insersectionArea > maxIntersectionArea) {
+				bestFittingMonitor = monitor;
+				maxIntersectionArea = insersectionArea;
+			}
+		}
+
+		return bestFittingMonitor;
+	}
+
+	private static void moveIntoBounds(Rectangle rectangleToMove, Rectangle bounds) {
+		// move into bounds if it's too far to the right
+		if (rectangleToMove.x + rectangleToMove.width > bounds.x + bounds.width) {
+			rectangleToMove.x = bounds.x + bounds.width - rectangleToMove.width;
+		}
+
+		// move into bounds if it's too far to the left
+		if (rectangleToMove.x < bounds.x) {
+			rectangleToMove.x = bounds.x;
+		}
+
+		// move into bounds if it's too far down
+		if (rectangleToMove.y + rectangleToMove.height > bounds.y + bounds.height) {
+			rectangleToMove.y = bounds.y + bounds.height - rectangleToMove.height;
+		}
+
+		// move into bounds if it's too far up
+		if (rectangleToMove.y < bounds.y) {
+			rectangleToMove.y = bounds.y;
+		}
 	}
 
 	/*
@@ -1668,9 +1774,6 @@ public final class Workbench extends EventManager implements IWorkbench, org.ecl
 		return true;
 	}
 
-	/**
-	 *
-	 */
 	private void initializeWorkbenchImages() {
 		StartupThreading.runWithoutExceptions(new StartupRunnable() {
 			@Override
@@ -2103,11 +2206,6 @@ public final class Workbench extends EventManager implements IWorkbench, org.ecl
 		return result;
 	}
 
-	/**
-	 * @param id
-	 * @param rootContext
-	 * @return
-	 */
 	private MBindingContext searchContexts(String id, List<MBindingContext> rootContext) {
 		for (MBindingContext context : rootContext) {
 			if (context.getElementId().equals(id)) {
@@ -2135,8 +2233,6 @@ public final class Workbench extends EventManager implements IWorkbench, org.ecl
 	}
 
 	/**
-	 * @param bindingTables
-	 * @param id
 	 * @return true if this BT already exists
 	 */
 	private boolean contains(List<MBindingTable> bindingTables, String id) {
@@ -2938,17 +3034,26 @@ public final class Workbench extends EventManager implements IWorkbench, org.ecl
 		workbenchListeners.clear();
 
 		cancelEarlyStartup();
-		if (workbenchService != null)
+		if (workbenchService != null) {
 			workbenchService.unregister();
+		}
 		workbenchService = null;
 
-		if (e4WorkbenchService != null)
+		if (e4WorkbenchService != null) {
 			e4WorkbenchService.unregister();
+		}
 		e4WorkbenchService = null;
 
 		// for dynamic UI
 		registry.removeRegistryChangeListener(extensionEventHandler);
 		registry.removeRegistryChangeListener(startupRegistryListener);
+
+		// shut down activity helper before disposing workbench activity support;
+		// dispose activity support before disposing service locator to avoid
+		// unnecessary activity disablement processing
+		activityHelper.shutdown();
+		workbenchActivitySupport.dispose();
+		WorkbenchHelpSystem.disposeIfNecessary();
 
 		// Bring down all of the services.
 		serviceLocator.dispose();
@@ -2957,11 +3062,7 @@ public final class Workbench extends EventManager implements IWorkbench, org.ecl
 		getDisplay().removeFilter(SWT.MouseDown, backForwardListener);
 		backForwardListener = null;
 
-		workbenchActivitySupport.dispose();
-		WorkbenchHelpSystem.disposeIfNecessary();
-
 		// shutdown the rest of the workbench
-		activityHelper.shutdown();
 		uninitializeImages();
 		if (WorkbenchPlugin.getDefault() != null) {
 			WorkbenchPlugin.getDefault().reset();
@@ -3367,8 +3468,6 @@ public final class Workbench extends EventManager implements IWorkbench, org.ecl
 	 *
 	 * @param menuIds          The identifiers of the menu that is now showing; must
 	 *                         not be <code>null</code>.
-	 * @param localSelection
-	 * @param localEditorInput
 	 */
 	public void addShowingMenus(final Set menuIds, final ISelection localSelection, final ISelection localEditorInput) {
 		menuSourceProvider.addShowingMenus(menuIds, localSelection, localEditorInput);
@@ -3385,8 +3484,6 @@ public final class Workbench extends EventManager implements IWorkbench, org.ecl
 	 *
 	 * @param menuIds          The identifiers of the menu that is now hidden; must
 	 *                         not be <code>null</code>.
-	 * @param localSelection
-	 * @param localEditorInput
 	 */
 	public void removeShowingMenus(final Set menuIds, final ISelection localSelection,
 			final ISelection localEditorInput) {

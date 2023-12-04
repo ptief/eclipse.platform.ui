@@ -63,7 +63,6 @@ public class UIJobTest extends UITestCase {
 	 * Test to ensure that calling join() on a UIJob will block the calling
 	 * thread until the job has finished.
 	 *
-	 * @throws Exception
 	 * @since 3.1
 	 */
 	@Test
@@ -75,15 +74,10 @@ public class UIJobTest extends UITestCase {
 		backgroundThreadInterrupted = false;
 		uiJobFinishedBeforeBackgroundThread = false;
 
-		final UIJob testJob = new UIJob("blah blah blah") {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor) {
-				backgroundThreadFinishedBeforeUIJob = backgroundThreadFinished;
-				uiJobFinished = true;
-
-				return Status.OK_STATUS;
-			}
-		};
+		final UIJob testJob = UIJob.create("blah blah blah", m -> {
+			backgroundThreadFinishedBeforeUIJob = backgroundThreadFinished;
+			uiJobFinished = true;
+		});
 
 		testJob.setPriority(Job.INTERACTIVE);
 
@@ -151,9 +145,10 @@ public class UIJobTest extends UITestCase {
 			Assert.assertTrue("We tried to sleep the UI thread, but it woke up too early. ",
 					finalTime - currentTime >= 200);
 
-			Assert.assertTrue("Background thread did not start, so there was no possibility "
-					+ "of testing whether its behavior was correct. This is not a test failure. "
-					+ "It means we were unable to run the test. ",
+			Assert.assertTrue("""
+				Background thread did not start, so there was no possibility\s\
+				of testing whether its behavior was correct. This is not a test failure.\s\
+				It means we were unable to run the test.\s""",
 					backgroundThreadStarted);
 
 			Assert.assertFalse("A UI job somehow ran to completion while the UI thread was blocked", uiJobFinished);

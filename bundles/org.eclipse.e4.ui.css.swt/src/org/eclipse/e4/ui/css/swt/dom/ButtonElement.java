@@ -25,7 +25,6 @@ import org.eclipse.swt.widgets.Button;
 
 /**
  * {@link CSSStylableElement} implementation which wrap SWT {@link Button}.
- *
  */
 public class ButtonElement extends ControlElement {
 
@@ -34,8 +33,10 @@ public class ButtonElement extends ControlElement {
 	private SelectionListener selectionListener = new SelectionAdapter() {
 		@Override
 		public void widgetSelected(SelectionEvent e) {
-			ButtonElement.this.isSelected = getButton().getSelection();
-			doApplyStyles();
+			if (!e.widget.isDisposed()) {
+				ButtonElement.this.isSelected = getButton().getSelection();
+				doApplyStyles();
+			}
 		}
 	};
 

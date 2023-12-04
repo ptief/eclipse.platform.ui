@@ -14,13 +14,10 @@
 package org.eclipse.urischeme.internal.registration;
 
 import java.io.BufferedWriter;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -101,7 +98,6 @@ public class PlistFileWriter {
 	 *
 	 * @see <a href= "https://tools.ietf.org/html/rfc3986#section-3.1">Uniform
 	 *      Resource Identifier (URI): Generic Syntax</a>
-	 *
 	 */
 	public void addScheme(String scheme, String schemeDescription) {
 		// check precondition
@@ -156,7 +152,6 @@ public class PlistFileWriter {
 	 *
 	 * @see <a href=
 	 *      "https://tools.ietf.org/html/rfc3986#section-3.1">https://tools.ietf.org/html/rfc3986#section-3.1</a>
-	 *
 	 */
 	public void removeScheme(String scheme) {
 		Util.assertUriSchemeIsLegal(scheme);
@@ -177,7 +172,6 @@ public class PlistFileWriter {
 	 *
 	 * @param writer The Writer to which the xml should be written to, e.g.
 	 *               {@link BufferedWriter}
-	 *
 	 */
 	public void writeTo(Writer writer) {
 		boolean hasDict = false;
@@ -204,33 +198,24 @@ public class PlistFileWriter {
 	}
 
 	private void transformDocument(Writer writer) {
-		try {
+		try (writer) {
 			DOMSource source = new DOMSource(this.document);
-			TransformerFactory.newInstance().newTransformer().transform(source, new StreamResult(writer));
-		} catch (TransformerException e) {
+			@SuppressWarnings("restriction")
+			TransformerFactory f = org.eclipse.core.internal.runtime.XmlProcessorFactory
+			.createTransformerFactoryWithErrorOnDOCTYPE();
+			f.newTransformer().transform(source, new StreamResult(writer));
+		} catch (TransformerException | IOException e) {
 			throw new IllegalStateException(e);
-		} finally {
-			close(writer);
 		}
 	}
 
+	@SuppressWarnings("restriction")
 	private Document getDom(Reader reader) {
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		try {
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			return builder.parse(new InputSource(reader));
+		try (reader) {
+			return org.eclipse.core.internal.runtime.XmlProcessorFactory
+					.parseWithErrorOnDOCTYPE(new InputSource(reader));
 		} catch (ParserConfigurationException | IOException | SAXException e) {
 			throw new IllegalArgumentException(e);
-		} finally {
-			close(reader);
-		}
-	}
-
-	private void close(Closeable closeable) {
-		try {
-			closeable.close();
-		} catch (IOException e) {
-			throw new IllegalStateException(e);
 		}
 	}
 

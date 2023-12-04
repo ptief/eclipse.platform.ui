@@ -67,8 +67,8 @@ import org.eclipse.jface.util.Util;
  *
  * @since 3.1
  */
-public final class BindingManager extends HandleObjectManager implements
-		IContextManagerListener, ISchemeListener {
+public final class BindingManager extends HandleObjectManager<Scheme>
+		implements IContextManagerListener, ISchemeListener {
 
 	/**
 	 * This flag can be set to <code>true</code> if the binding manager should
@@ -1421,7 +1421,7 @@ public final class BindingManager extends HandleObjectManager implements
 	 *         <code>null</code>.
 	 */
 	public Scheme[] getDefinedSchemes() {
-		return (Scheme[]) definedHandleObjects
+		return definedHandleObjects
 				.toArray(new Scheme[definedHandleObjects.size()]);
 	}
 
@@ -1541,7 +1541,7 @@ public final class BindingManager extends HandleObjectManager implements
 	public Scheme getScheme(final String schemeId) {
 		checkId(schemeId);
 
-		Scheme scheme = (Scheme) handleObjectsById.get(schemeId);
+		Scheme scheme = handleObjectsById.get(schemeId);
 		if (scheme == null) {
 			scheme = new Scheme(schemeId);
 			handleObjectsById.put(schemeId, scheme);
@@ -1848,7 +1848,6 @@ public final class BindingManager extends HandleObjectManager implements
 	 *            Currently ignored.
 	 * @param type
 	 *            The type to look for.
-	 *
 	 */
 	public void removeBindings(final TriggerSequence sequence,
 			final String schemeId, final String contextId, final String locale,

@@ -32,15 +32,10 @@ import org.eclipse.swt.widgets.Control;
  * @noextend this class is not intended to be subclassed by clients.
  *
  * @since 3.18
- *
  */
 public abstract class AbstractControlFactory<F extends AbstractControlFactory<?, ?>, C extends Control>
 		extends AbstractWidgetFactory<F, C, Composite> {
 
-	/**
-	 * @param factoryClass
-	 * @param controlCreator
-	 */
 	AbstractControlFactory(Class<F> factoryClass, WidgetSupplier<C, Composite> controlCreator) {
 		super(factoryClass, controlCreator);
 	}
@@ -52,9 +47,9 @@ public abstract class AbstractControlFactory<F extends AbstractControlFactory<?,
 	 * setting the tool tip text to an empty string replaces the default, causing no
 	 * tool tip text to be shown.
 	 *
-	 * The mnemonic indicator (character '&') is not displayed in a tool tip. To
-	 * display a single '&' in the tool tip, the character '&' can be escaped by
-	 * doubling it in the string.
+	 * The mnemonic indicator (character '&amp;') is not displayed in a tool tip. To
+	 * display a single '&amp;' in the tool tip, the character '&amp;' can be
+	 * escaped by doubling it in the string.
 	 *
 	 * @param tooltipText the tool tip text
 	 * @return this

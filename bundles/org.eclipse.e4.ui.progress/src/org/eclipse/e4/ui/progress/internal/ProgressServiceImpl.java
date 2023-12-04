@@ -19,8 +19,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import javax.inject.Inject;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -46,6 +44,8 @@ import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+
+import jakarta.inject.Inject;
 
 public class ProgressServiceImpl implements IProgressService {
 
@@ -252,9 +252,6 @@ public class ProgressServiceImpl implements IProgressService {
 	/**
 	 * Show the busy cursor while the runnable is running. Schedule a job to
 	 * replace it with a progress dialog.
-	 *
-	 * @param dialogWaitRunnable
-	 * @param dialog
 	 */
 	private void busyCursorWhile(Runnable dialogWaitRunnable,
 			ProgressMonitorJobsDialog dialog) {
@@ -277,17 +274,12 @@ public class ProgressServiceImpl implements IProgressService {
 	private void scheduleProgressMonitorJob(
 			final ProgressMonitorJobsDialog dialog) {
 
-		final Job updateJob = new UIJob(
-				ProgressMessages.ProgressManager_openJobName) {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor) {
-				setUserInterfaceActive(true);
-				if (ProgressManagerUtil.safeToOpen(dialog, null)) {
-					dialog.open();
-				}
-				return Status.OK_STATUS;
+		Job updateJob = UIJob.create(ProgressMessages.ProgressManager_openJobName, monitor -> {
+			setUserInterfaceActive(true);
+			if (ProgressManagerUtil.safeToOpen(dialog, null)) {
+				dialog.open();
 			}
-		};
+		});
 		updateJob.setSystem(true);
 		updateJob.schedule(getLongOperationTime());
 

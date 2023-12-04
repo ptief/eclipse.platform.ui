@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ColumnWeightData;
@@ -461,9 +462,6 @@ public class WebBrowserPreferencePage extends PreferencePage implements
 		// do nothing
 	}
 
-	/**
-	 *
-	 */
 	@Override
 	public void setVisible(boolean visible) {
 		super.setVisible(visible);
@@ -541,8 +539,7 @@ public class WebBrowserPreferencePage extends PreferencePage implements
 	 */
 	@Override
 	protected void performDefaults() {
-		internal.setSelection(false);
-		external.setSelection(true);
+		setDefaultChoiceSelection();
 
 		BrowserManager.getInstance().currentBrowser = null;
 		BrowserManager.getInstance().setupDefaultBrowsers();
@@ -561,8 +558,7 @@ public class WebBrowserPreferencePage extends PreferencePage implements
 	 * appeared after the Eclipse Platform update.
 	 */
 	protected void addDefaults() {
-		internal.setSelection(false);
-		external.setSelection(true);
+		setDefaultChoiceSelection();
 
 		BrowserManager.getInstance().currentBrowser = null;
 		BrowserManager.getInstance().addDefaultBrowsers();
@@ -599,5 +595,18 @@ public class WebBrowserPreferencePage extends PreferencePage implements
 	public boolean performCancel() {
 		BrowserManager.getInstance().loadBrowsers();
 		return super.performCancel();
+	}
+
+	private void setDefaultChoiceSelection() {
+		int browserChoice = getBrowserChoiceDefaultPreference();
+		internal.setSelection(browserChoice == WebBrowserPreference.INTERNAL);
+		external.setSelection(browserChoice == WebBrowserPreference.EXTERNAL);
+	}
+
+	private static int getBrowserChoiceDefaultPreference() {
+		IPreferenceStore preferenceStore = WebBrowserUIPlugin.getInstance().getPreferenceStore();
+		int browserChoice = preferenceStore.getDefaultInt(WebBrowserPreference.PREF_BROWSER_CHOICE);
+		return browserChoice;
+
 	}
 }

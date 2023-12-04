@@ -60,6 +60,19 @@ public class JobInfo extends JobTreeElement {
 		this.taskInfo = Optional.empty();
 	}
 
+	@Override
+	public int hashCode() {
+		return job.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof JobInfo) {
+			return job.equals(((JobInfo) obj).job);
+		}
+		return false;
+	}
+
 	/**
 	 * Adds the subtask to the receiver.
 	 *
@@ -71,8 +84,6 @@ public class JobInfo extends JobTreeElement {
 
 	/**
 	 * Adds the amount of work to the job info.
-	 *
-	 * @param workIncrement
 	 */
 	void addWork(double workIncrement) {
 		Optional<TaskInfo> optionalInfo = getTaskInfo();
@@ -89,9 +100,6 @@ public class JobInfo extends JobTreeElement {
 
 	/**
 	 * Begins the task called taskName with the supplied work.
-	 *
-	 * @param taskName
-	 * @param work
 	 */
 	void beginTask(String taskName, int work) {
 		taskInfo = Optional.of(new TaskInfo(this, taskName, work));
@@ -117,48 +125,6 @@ public class JobInfo extends JobTreeElement {
 		taskInfo = Optional.empty();
 	}
 
-	/**
-	 * Compares the job of the receiver to another job.
-	 *
-	 * @param jobInfo The info we are comparing to
-	 * @return Returns a negative integer, zero, or a positive integer as this
-	 *         object is less than, equal to, or greater than the specified object.
-	 */
-	private int compareJobs(JobInfo jobInfo) {
-		Job job2 = jobInfo.getJob();
-
-		// User jobs have top priority
-		if (job.isUser()) {
-			if (!job2.isUser()) {
-				return -1;
-			}
-		} else if (job2.isUser()) {
-			return 1;
-		}
-
-		// Show the blocked ones last.
-		if (isBlocked()) {
-			if (!jobInfo.isBlocked()) {
-				return 1;
-			}
-		} else if (jobInfo.isBlocked()) {
-			return -1;
-		}
-
-		int thisPriority = job.getPriority();
-		int otherPriority = job2.getPriority();
-		// If equal priority, order by names
-		if (thisPriority == otherPriority) {
-			return job.getName().compareTo(job2.getName());
-		}
-
-		// order by priority (lower value is higher priority)
-		if (thisPriority < otherPriority) {
-			return -1;
-		}
-		return 1;
-	}
-
 	// for debugging only
 	@Override
 	public String toString() {
@@ -167,34 +133,6 @@ public class JobInfo extends JobTreeElement {
 				+ " isBlocked=" + isBlocked() //$NON-NLS-1$
 				+ " priority=" + job.getPriority() //$NON-NLS-1$
 				+ ")"; //$NON-NLS-1$
-	}
-
-	@Override
-	public int compareTo(JobTreeElement other) {
-		if (!(other instanceof JobInfo)) {
-			return super.compareTo(other);
-		}
-		JobInfo element = (JobInfo) other;
-
-		boolean thisCanceled = isCanceled();
-		boolean anotherCanceled = element.isCanceled();
-		if (thisCanceled && !anotherCanceled) {
-			// If the receiver is cancelled then it is lowest priority
-			return 1;
-		} else if (!thisCanceled && anotherCanceled) {
-			return -1;
-		}
-
-		int thisState = getJob().getState();
-		int anotherState = element.getJob().getState();
-
-		// if equal job state, compare other job attributes
-		if (thisState == anotherState) {
-			return compareJobs(element);
-		}
-
-		// ordering by job states, Job.RUNNING should be ordered first
-		return Integer.compare(anotherState, thisState);
 	}
 
 	/**
@@ -399,8 +337,6 @@ public class JobInfo extends JobTreeElement {
 
 	/**
 	 * Sets the GroupInfo to be the group.
-	 *
-	 * @param group
 	 */
 	void setGroupInfo(GroupInfo group) {
 		parent = group;
@@ -408,8 +344,6 @@ public class JobInfo extends JobTreeElement {
 
 	/**
 	 * Sets the name of the taskInfo.
-	 *
-	 * @param name
 	 */
 	void setTaskName(String name) {
 		taskInfo.ifPresent(info -> info.setTaskName(name));

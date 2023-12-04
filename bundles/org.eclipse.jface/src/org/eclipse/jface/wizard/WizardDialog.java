@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -329,7 +329,6 @@ public class WizardDialog extends TitleAreaDialog implements IWizardContainer2, 
 	 * {@inheritDoc}
 	 *
 	 * @see #setModal(boolean)
-	 *
 	 */
 	@Override
 	public void setShellStyle(int newShellStyle) {
@@ -725,7 +724,6 @@ public class WizardDialog extends TitleAreaDialog implements IWizardContainer2, 
 	/**
 	 * Creates the container that holds all pages.
 	 *
-	 * @param parent
 	 * @return Composite
 	 */
 	private Composite createPageContainer(Composite parent) {
@@ -748,6 +746,10 @@ public class WizardDialog extends TitleAreaDialog implements IWizardContainer2, 
 			if (page.getControl() != null) {
 				page.getControl().setVisible(false);
 			}
+		}
+		Point minWizardSize = wizard.getMinimumWizardSize();
+		if (minWizardSize != null) {
+			getShell().setMinimumSize(minWizardSize);
 		}
 	}
 
@@ -922,7 +924,6 @@ public class WizardDialog extends TitleAreaDialog implements IWizardContainer2, 
 	 * Notifies page changing listeners and returns result of page changing
 	 * processing to the sender.
 	 *
-	 * @param eventType
 	 * @return <code>true</code> if page changing listener completes
 	 *         successfully, <code>false</code> otherwise
 	 */
@@ -1010,7 +1011,6 @@ public class WizardDialog extends TitleAreaDialog implements IWizardContainer2, 
 	 * restored after the long-running operation completes executing. Any
 	 * attempt to change the UI state of the wizard in the long-running
 	 * operation will be nullified when original UI state is restored.
-	 *
 	 */
 	@Override
 	public void run(boolean fork, boolean cancelable, IRunnableWithProgress runnable)
@@ -1226,8 +1226,6 @@ public class WizardDialog extends TitleAreaDialog implements IWizardContainer2, 
 
 	/**
 	 * Update the receiver for the new page.
-	 *
-	 * @param page
 	 */
 	private void updateForPage(IWizardPage page) {
 		// ensure this page belongs to the current wizard

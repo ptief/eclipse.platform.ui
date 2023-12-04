@@ -29,7 +29,6 @@ import org.eclipse.core.commands.common.EventManager;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SafeRunner;
 import org.eclipse.jface.util.SafeRunnable;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
@@ -160,7 +159,6 @@ public class ResourceTreeAndListGroup extends EventManager {
 	 * @param style               style for the composite
 	 * @param useHeightHint       If true then use the height hint to make this
 	 *                            group big enough
-	 *
 	 */
 	public ResourceTreeAndListGroup(Composite parent, Object rootObject,
 			ITreeContentProvider treeContentProvider,
@@ -659,7 +657,7 @@ public class ResourceTreeAndListGroup extends EventManager {
 		if (parentLabel == null){
 			label = ""; //$NON-NLS-1$
 		}
-		IPath parentName = new Path(label);
+		IPath parentName = IPath.fromOSString(label);
 
 		String elementText = treeLabelProvider.getText(treeElement);
 		if(elementText == null) {
@@ -672,7 +670,6 @@ public class ResourceTreeAndListGroup extends EventManager {
 	 * Return a count of the number of list items associated with a
 	 * given tree item.
 	 *
-	 * @param treeElement
 	 * @return the list item count
 	 */
 	private int getListItemsSize(Object treeElement) {

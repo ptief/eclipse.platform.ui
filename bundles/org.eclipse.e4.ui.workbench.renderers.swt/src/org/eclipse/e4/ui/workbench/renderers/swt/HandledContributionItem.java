@@ -20,10 +20,10 @@
 ******************************************************************************/
 package org.eclipse.e4.ui.workbench.renderers.swt;
 
+import jakarta.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.IStateListener;
 import org.eclipse.core.commands.ParameterizedCommand;
@@ -132,9 +132,6 @@ public class HandledContributionItem extends AbstractContributionItem {
 		setModel((MItem) item);
 	}
 
-	/**
-	 *
-	 */
 	private void generateCommand() {
 		if (getModel().getCommand() != null && getModel().getWbCommand() == null) {
 			String cmdId = getModel().getCommand().getElementId();

@@ -39,9 +39,6 @@ import org.osgi.framework.Bundle;
  */
 public class MockPart extends EventManager implements IExecutableExtension {
 
-	/**
-	 *
-	 */
 	public MockPart() {
 		callTrace = new CallHistory(this);
 		selectionProvider = new MockSelectionProvider();
@@ -57,7 +54,7 @@ public class MockPart extends EventManager implements IExecutableExtension {
 
 	private Image titleImage;
 
-	private DisposeListener disposeListener = e -> MockPart.this.widgetDisposed();
+	private final DisposeListener disposeListener = e -> MockPart.this.widgetDisposed();
 
 	public CallHistory getCallHistory() {
 		return callTrace;
@@ -126,6 +123,10 @@ public class MockPart extends EventManager implements IExecutableExtension {
 	 * @see IWorkbenchPart#dispose()
 	 */
 	public void dispose() {
+		if (titleImage != null) {
+			titleImage.dispose();
+			titleImage = null;
+		}
 		callTrace.add("dispose");
 	}
 
@@ -151,7 +152,6 @@ public class MockPart extends EventManager implements IExecutableExtension {
 	}
 
 	/**
-	 * @param adapter
 	 * @see IAdaptable#getAdapter(Class)
 	 */
 	public <T> T getAdapter(Class<T> adapter) {

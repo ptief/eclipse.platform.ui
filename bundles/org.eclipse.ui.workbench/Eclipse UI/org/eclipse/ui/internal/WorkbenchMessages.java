@@ -28,7 +28,6 @@ import org.eclipse.osgi.util.NLS;
 /**
  * Message class for workbench messages. These messages are used throughout the
  * workbench.
- *
  */
 public class WorkbenchMessages extends NLS {
 	private static final String BUNDLE_NAME = "org.eclipse.ui.internal.messages";//$NON-NLS-1$
@@ -730,6 +729,9 @@ public class WorkbenchMessages extends NLS {
 	public static String WorkbenchPreference_recentFilesError;
 	public static String WorkbenchPreference_workbenchSaveInterval;
 	public static String WorkbenchPreference_workbenchSaveIntervalError;
+	public static String WorkbenchPreference_largeViewLimit;
+	public static String WorkbenchPreference_largeViewLimitTooltip;
+	public static String WorkbenchPreference_largeViewLimitError;
 	public static String WorkbenchEditorsAction_label;
 	public static String WorkbookEditorsAction_label;
 

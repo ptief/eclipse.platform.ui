@@ -23,8 +23,10 @@ import org.eclipse.e4.ui.model.application.MApplication;
 import org.eclipse.e4.ui.model.application.descriptor.basic.MPartDescriptor;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.ui.activities.WorkbenchActivityHelper;
 import org.eclipse.ui.internal.WorkbenchPlugin;
 import org.eclipse.ui.internal.e4.compatibility.CompatibilityPart;
+import org.eclipse.ui.views.IViewDescriptor;
 import org.eclipse.ui.views.IViewRegistry;
 
 /**
@@ -91,7 +93,6 @@ public class ViewContentProvider implements ITreeContentProvider {
 	 * Determines the categories and views
 	 *
 	 * Views are identified as PartDescriptors which have the tag "View"
-	 *
 	 */
 	private Object[] createChildren(Object element) {
 		if (element instanceof MApplication) {
@@ -103,7 +104,6 @@ public class ViewContentProvider implements ITreeContentProvider {
 	}
 
 	/**
-	 * @param categoryDescription
 	 * @return views with the category tag
 	 */
 	private Set<MPartDescriptor> determineViewsInCategory(String categoryDescription) {
@@ -168,12 +168,13 @@ public class ViewContentProvider implements ITreeContentProvider {
 	 * Evaluates if the view is filtered by an activity. Note that this is only
 	 * possible for E3 views, as activities don't exist in the Eclipse 4.
 	 *
-	 * @param descriptor
 	 * @return result of the check
 	 */
 	private boolean isFilteredByActivity(MPartDescriptor descriptor) {
-		// viewRegistry.find(...) already applies a filtering for disabled views
-		boolean isFiltered = viewRegistry.find(descriptor.getElementId()) == null;
+		IViewDescriptor view = viewRegistry.find(descriptor.getElementId());
+
+		// viewRegistry.find(...) already applies a filtering for views disabled via core expressions
+		boolean isFiltered = (view == null) || WorkbenchActivityHelper.filterItem(view);
 
 		// E3 views can be detected by checking whether they use the compatibility layer
 		boolean isE3View = CompatibilityPart.COMPATIBILITY_VIEW_URI.equals(descriptor.getContributionURI());

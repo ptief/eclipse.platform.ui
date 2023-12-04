@@ -18,13 +18,13 @@ package org.eclipse.e4.ui.tests.workbench;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.annotation.PostConstruct;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.ui.di.UISynchronize;
@@ -2159,8 +2159,6 @@ public class ModelAssemblerFragmentOrderingTests {
 	 * imports Menu 0.0 from fragment2
 	 * <p>
 	 * fragment2 contributes Menu0.0, Menu 0.2 and MenuItem 0.0.1
-	 *
-	 *
 	 */
 	@Test
 	public void testMenuAndItemsInFragmentsWithImports() {

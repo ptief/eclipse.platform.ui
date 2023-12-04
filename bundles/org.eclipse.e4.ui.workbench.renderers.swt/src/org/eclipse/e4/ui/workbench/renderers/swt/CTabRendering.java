@@ -19,7 +19,6 @@ package org.eclipse.e4.ui.workbench.renderers.swt;
 
 import java.lang.reflect.Field;
 import java.util.Objects;
-import javax.inject.Inject;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
@@ -131,7 +130,6 @@ public class CTabRendering extends CTabFolderRenderer implements ICTabRendering,
 
 	private boolean drawCustomTabContentBackground;
 
-	@Inject
 	public CTabRendering(CTabFolder parent) {
 		super(parent);
 		parentWrapper = new CTabFolderWrapper(parent);
@@ -402,8 +400,12 @@ public class CTabRendering extends CTabFolderRenderer implements ICTabRendering,
 						|| Objects.equals(outerKeylineColor, parent.getBackground())
 						? 0
 						: 1);
-		points[index++] = margin;
-		points[index++] = bottomY;
+
+		if (active) {
+			points[index++] = margin;
+			points[index++] = bottomY;
+		}
+
 		points[index++] = startX;
 		points[index++] = bottomY;
 
@@ -420,15 +422,6 @@ public class CTabRendering extends CTabFolderRenderer implements ICTabRendering,
 			points[index++] = parentSize.x - 1 - margin;
 			points[index++] = bottomY;
 		}
-
-		points[index++] = parentSize.x - 1 - margin;
-		points[index++] = parentSize.y - 1;
-
-		points[index++] = points[0];
-		points[index++] = parentSize.y - 1;
-
-		points[index++] = points[0];
-		points[index++] = points[1];
 
 		int[] tmpPoints = new int[index];
 		System.arraycopy(points, 0, tmpPoints, 0, index);
@@ -996,8 +989,6 @@ public class CTabRendering extends CTabFolderRenderer implements ICTabRendering,
 	 * Sets whether to use a custom tab background (reusing tab colors and
 	 * gradients), or default one from plain CTabFolder (using widget background
 	 * color).
-	 *
-	 * @param drawCustomTabContentBackground
 	 */
 	@Override
 	public void setDrawCustomTabContentBackground(boolean drawCustomTabContentBackground) {
@@ -1006,10 +997,6 @@ public class CTabRendering extends CTabFolderRenderer implements ICTabRendering,
 
 	/**
 	 * Draws tab content background, deriving the colors from the tab colors.
-	 *
-	 * @param gc
-	 * @param bounds
-	 * @param state
 	 */
 	private void drawCustomBackground(GC gc, Rectangle bounds, int state) {
 		boolean selected = (state & SWT.SELECTED) != 0;

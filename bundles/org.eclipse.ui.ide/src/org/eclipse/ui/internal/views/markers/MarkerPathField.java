@@ -23,14 +23,17 @@ import org.eclipse.ui.views.markers.MarkerItem;
  * MarkerPathField is the field for the paths column.
  *
  * @since 3.4
- *
  */
 public class MarkerPathField extends MarkerField {
 
 	@Override
 	public int compare(MarkerItem item1, MarkerItem item2) {
-		if (item1.getMarker() == null || item2.getMarker() == null)
+		if (item1.getMarker() == null && item2.getMarker() == null)
 			return 0;
+		if (item1.getMarker() == null)
+			return 1;
+		if (item2.getMarker() == null)
+			return -1;
 
 		return item1.getPath().compareTo(item2.getPath());
 	}

@@ -16,9 +16,9 @@
  *******************************************************************************/
 package org.eclipse.e4.ui.workbench.renderers.swt;
 
+import jakarta.inject.Inject;
 import java.util.HashMap;
 import java.util.HashSet;
-import javax.inject.Inject;
 import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.core.expressions.ExpressionInfo;
 import org.eclipse.core.runtime.ISafeRunnable;
@@ -144,13 +144,6 @@ public class MenuManagerRendererFilter implements Listener {
 		}
 	}
 
-	/**
-	 * @param info
-	 * @param menuModel
-	 * @param renderer
-	 * @param evalContext
-	 * @param recurse
-	 */
 	public static void collectInfo(ExpressionInfo info, final MMenu menuModel,
 			final MenuManagerRenderer renderer,
 			final IEclipseContext evalContext, boolean recurse) {
@@ -172,12 +165,6 @@ public class MenuManagerRendererFilter implements Listener {
 		}
 	}
 
-	/**
-	 * @param menuModel
-	 * @param renderer
-	 * @param menuManager
-	 * @param evalContext
-	 */
 	public static void updateElementVisibility(final MMenu menuModel,
 			MenuManagerRenderer renderer, MenuManager menuManager,
 			final IEclipseContext evalContext, final int recurseLevel,

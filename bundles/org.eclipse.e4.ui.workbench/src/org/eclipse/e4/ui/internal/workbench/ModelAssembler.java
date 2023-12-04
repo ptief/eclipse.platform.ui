@@ -19,6 +19,8 @@
 
 package org.eclipse.e4.ui.internal.workbench;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,8 +37,6 @@ import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
@@ -338,7 +338,6 @@ public class ModelAssembler {
 	 *
 	 * @param extensions the list of {@link IExtension} extension elements
 	 * @param initial    <code>true</code> if running from a non-persisted state
-	 *
 	 */
 	private void processFragments(IExtension[] extensions, boolean initial) {
 		List<ModelFragmentWrapper> wrappers = new ArrayList<>();
